@@ -36,5 +36,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@jridgewell/sourcemap-codec": "^1.5.5",
+    "@rollup/plugin-terser": "^0.4.4"
   }
 }
