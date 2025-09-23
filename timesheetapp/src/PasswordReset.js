@@ -1,284 +1,208 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Lock, AlertCircle, CheckCircle } from 'lucide-react';
-import './App.css';
+// import React, { useState } from 'react';
+// import { Eye, EyeOff, Lock, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+// import './App.css';
 
-const PasswordReset = () => {
-  const [formData, setFormData] = useState({
-    token: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ text: '', type: '' });
-  const [errors, setErrors] = useState({});
+// const AuthForm = () => {
+//   const [isRegister, setIsRegister] = useState(false);
+//   const [formData, setFormData] = useState({
+//     username: '',
+//     email: '',
+//     password: '',
+//     role: ''
+//   });
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [message, setMessage] = useState({ text: '', type: '' });
+//   const [loading, setLoading] = useState(false);
+//   const [errors, setErrors] = useState({});
 
-  // Extract token from URL parameters on component mount
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
-    if (tokenFromUrl) {
-      setFormData(prev => ({ ...prev, token: tokenFromUrl }));
-    }
-  }, []);
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+//     if (errors[name]) {
+//       setErrors(prev => ({ ...prev, [name]: '' }));
+//     }
+//   };
 
-  const validatePassword = (password) => {
-    const minLength = password.length >= 8;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+//   const validateForm = () => {
+//     const newErrors = {};
+//     if (!formData.username.trim()) newErrors.username = 'Username is required';
+//     if (!formData.password.trim()) newErrors.password = 'Password is required';
+//     if (isRegister && !formData.email.trim()) newErrors.email = 'Email is required';
+//     if (isRegister && !formData.role.trim()) newErrors.role = 'Role is required';
+//     setErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
 
-    return {
-      minLength,
-      hasUppercase,
-      hasLowercase,
-      hasNumbers,
-      hasSpecialChar,
-      isValid: minLength && hasUppercase && hasLowercase && hasNumbers && hasSpecialChar
-    };
-  };
+//   const handleSubmit = async () => {
+//     if (!validateForm()) return;
 
-  const validateForm = () => {
-    const newErrors = {};
+//     setLoading(true);
+//     setMessage({ text: '', type: '' });
 
-    if (!formData.token.trim()) {
-      newErrors.token = 'Reset token is required';
-    }
+//     const endpoint = isRegister ? '/auth/register' : '/auth/login';
+//     const payload = isRegister
+//       ? {
+//           username: formData.username,
+//           password: formData.password,
+//           email: formData.email,
+//           role: formData.role
+//         }
+//       : {
+//           username: formData.username,
+//           password: formData.password
+//         };
 
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required';
-    } else {
-      const passwordValidation = validatePassword(formData.newPassword);
-      if (!passwordValidation.isValid) {
-        newErrors.newPassword = 'Password does not meet requirements';
-      }
-    }
+//     try {
+//       const response = await fetch(`http://localhost:8080${endpoint}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(payload)
+//       });
 
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
+//       const data = await response.json();
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+//       if (response.ok) {
+//         if (!isRegister) {
+//           // Login success: store tokens
+//           localStorage.setItem('accessToken', data.accessToken);
+//           localStorage.setItem('refreshToken', data.refreshToken);
+//           setMessage({ text: 'Login successful!', type: 'success' });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear specific error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
+//           setTimeout(() => {
+//             window.location.href = '/dashboard';
+//           }, 1500);
+//         } else {
+//           setMessage({ text: 'Registration successful!', type: 'success' });
+//           setFormData({ username: '', email: '', password: '', role: '' });
+//           setIsRegister(false);
+//         }
+//       } else {
+//         const errorText = typeof data === 'string' ? data : 'Something went wrong';
+//         setMessage({ text: errorText, type: 'error' });
+//       }
+//     } catch (error) {
+//       setMessage({ text: 'Network error. Try again.', type: 'error' });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const handleSubmit = async () => {
-    
-    if (!validateForm()) {
-      return;
-    }
+//   return (
+//     <div className="auth-container">
+//       <div className="auth-card">
+//         <div className="header-section">
+//           <Lock className="lock-icon" />
+//           <h1 className="title">{isRegister ? 'Register' : 'Login'}</h1>
+//           <p className="subtitle">{isRegister ? 'Create your account' : 'Access your account'}</p>
+//         </div>
 
-    setLoading(true);
-    setMessage({ text: '', type: '' });
+//         {message.text && (
+//           <div className={`message ${message.type === 'success' ? 'message-success' : 'message-error'}`}>
+//             {message.type === 'success' ? <CheckCircle className="message-icon" /> : <AlertCircle className="message-icon" />}
+//             <span className="message-text">{message.text}</span>
+//           </div>
+//         )}
 
-    try {
-          const response = await fetch('http://localhost:8080/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: formData.token,
-          newPassword: formData.newPassword
-        })
-      });
+//         <div className="form-container">
+//           {/* Username */}
+//           <div className="input-group">
+//             <label htmlFor="username" className="input-label">Username</label>
+//             <div className="input-wrapper">
+//               <User className="input-icon" />
+//               <input
+//                 type="text"
+//                 id="username"
+//                 name="username"
+//                 value={formData.username}
+//                 onChange={handleInputChange}
+//                 className={`input-field ${errors.username ? 'input-error' : ''}`}
+//                 placeholder="Enter username"
+//               />
+//             </div>
+//             {errors.username && <p className="error-text">{errors.username}</p>}
+//           </div>
 
+//           {/* Email (only for register) */}
+//           {isRegister && (
+//             <div className="input-group">
+//               <label htmlFor="email" className="input-label">Email</label>
+//               <div className="input-wrapper">
+//                 <Mail className="input-icon" />
+//                 <input
+//                   type="email"
+//                   id="email"
+//                   name="email"
+//                   value={formData.email}
+//                   onChange={handleInputChange}
+//                   className={`input-field ${errors.email ? 'input-error' : ''}`}
+//                   placeholder="Enter email"
+//                 />
+//               </div>
+//               {errors.email && <p className="error-text">{errors.email}</p>}
+//             </div>
+//           )}
 
-      const responseText = await response.text();
+//           {/* Role (only for register) */}
+//           {isRegister && (
+//             <div className="input-group">
+//               <label htmlFor="role" className="input-label">Role</label>
+//               <select
+//                 id="role"
+//                 name="role"
+//                 value={formData.role}
+//                 onChange={handleInputChange}
+//                 className={`input-field ${errors.role ? 'input-error' : ''}`}
+//               >
+//                 <option value="">Select role</option>
+//                 <option value="ROLE_USER">User</option>
+//                 <option value="ROLE_ADMIN">Admin</option>
+//               </select>
+//               {errors.role && <p className="error-text">{errors.role}</p>}
+//             </div>
+//           )}
 
-      if (response.ok) {
-        setMessage({ 
-          text: responseText || 'Password reset successfully! You can now login with your new password.', 
-          type: 'success' 
-        });
-        // Clear form
-        setFormData({ token: '', newPassword: '', confirmPassword: '' });
-        
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 3000);
-      } else {
-        setMessage({ 
-          text: responseText || 'Failed to reset password. Please try again.', 
-          type: 'error' 
-        });
-      }
-    } catch (error) {
-      setMessage({ 
-        text: 'Network error. Please check your connection and try again.', 
-        type: 'error' 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+//           {/* Password */}
+//           <div className="input-group">
+//             <label htmlFor="password" className="input-label">Password</label>
+//             <div className="password-input-wrapper">
+//               <input
+//                 type={showPassword ? 'text' : 'password'}
+//                 id="password"
+//                 name="password"
+//                 value={formData.password}
+//                 onChange={handleInputChange}
+//                 className={`input-field password-input ${errors.password ? 'input-error' : ''}`}
+//                 placeholder="Enter password"
+//               />
+//               <button type="button" onClick={() => setShowPassword(!showPassword)} className="password-toggle">
+//                 {showPassword ? <EyeOff className="toggle-icon" /> : <Eye className="toggle-icon" />}
+//               </button>
+//             </div>
+//             {errors.password && <p className="error-text">{errors.password}</p>}
+//           </div>
 
-  const passwordValidation = validatePassword(formData.newPassword);
+//           {/* Submit Button */}
+//           <button
+//             type="button"
+//             onClick={handleSubmit}
+//             disabled={loading}
+//             className={`submit-button ${loading ? 'submit-button-loading' : ''}`}
+//           >
+//             {loading ? (isRegister ? 'Registering...' : 'Logging in...') : (isRegister ? 'Register' : 'Login')}
+//           </button>
+//         </div>
 
-  return (
-    <div className="password-reset-container">
-      <div className="password-reset-card">
-        <div className="header-section">
-          <div className="icon-wrapper">
-            <Lock className="lock-icon" />
-          </div>
-          <h1 className="title">Reset Password</h1>
-          <p className="subtitle">Enter your new password below</p>
-        </div>
+//         <div className="footer-section">
+//           <p className="toggle-text">
+//             {isRegister ? 'Already have an account?' : 'New to banking?'}{' '}
+//             <button className="toggle-link" onClick={() => setIsRegister(!isRegister)}>
+//               {isRegister ? 'Login here' : 'Register here'}
+//             </button>
+//           </p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
-        {message.text && (
-          <div className={`message ${message.type === 'success' ? 'message-success' : 'message-error'}`}>
-            {message.type === 'success' ? (
-              <CheckCircle className="message-icon" />
-            ) : (
-              <AlertCircle className="message-icon" />
-            )}
-            <span className="message-text">{message.text}</span>
-          </div>
-        )}
-
-        <div className="form-container">
-          {/* Token Input */}
-          <div className="input-group">
-            <label htmlFor="token" className="input-label">
-              Reset Token
-            </label>
-            <input
-              type="text"
-              id="token"
-              name="token"
-              value={formData.token}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className={`input-field ${errors.token ? 'input-error' : ''}`}
-              placeholder="Enter reset token"
-            />
-            {errors.token && (
-              <p className="error-text">{errors.token}</p>
-            )}
-          </div>
-
-          {/* New Password Input */}
-          <div className="input-group">
-            <label htmlFor="newPassword" className="input-label">
-              New Password
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="newPassword"
-                name="newPassword"
-                value={formData.newPassword}
-                onChange={handleInputChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                className={`input-field password-input ${errors.newPassword ? 'input-error' : ''}`}
-                placeholder="Enter new password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle"
-              >
-                {showPassword ? <EyeOff className="toggle-icon" /> : <Eye className="toggle-icon" />}
-              </button>
-            </div>
-            {errors.newPassword && (
-              <p className="error-text">{errors.newPassword}</p>
-            )}
-
-            {/* Password Requirements */}
-            {formData.newPassword && (
-              <div className="password-requirements">
-                <p className="requirements-title">Password Requirements:</p>
-                <div className="requirements-list">
-                  <div className={`requirement ${passwordValidation.minLength ? 'requirement-valid' : 'requirement-invalid'}`}>
-                    <div className={`requirement-dot ${passwordValidation.minLength ? 'dot-valid' : 'dot-invalid'}`}></div>
-                    At least 8 characters
-                  </div>
-                  <div className={`requirement ${passwordValidation.hasUppercase ? 'requirement-valid' : 'requirement-invalid'}`}>
-                    <div className={`requirement-dot ${passwordValidation.hasUppercase ? 'dot-valid' : 'dot-invalid'}`}></div>
-                    One uppercase letter
-                  </div>
-                  <div className={`requirement ${passwordValidation.hasLowercase ? 'requirement-valid' : 'requirement-invalid'}`}>
-                    <div className={`requirement-dot ${passwordValidation.hasLowercase ? 'dot-valid' : 'dot-invalid'}`}></div>
-                    One lowercase letter
-                  </div>
-                  <div className={`requirement ${passwordValidation.hasNumbers ? 'requirement-valid' : 'requirement-invalid'}`}>
-                    <div className={`requirement-dot ${passwordValidation.hasNumbers ? 'dot-valid' : 'dot-invalid'}`}></div>
-                    One number
-                  </div>
-                  <div className={`requirement ${passwordValidation.hasSpecialChar ? 'requirement-valid' : 'requirement-invalid'}`}>
-                    <div className={`requirement-dot ${passwordValidation.hasSpecialChar ? 'dot-valid' : 'dot-invalid'}`}></div>
-                    One special character
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Confirm Password Input */}
-          <div className="input-group">
-            <label htmlFor="confirmPassword" className="input-label">
-              Confirm New Password
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                className={`input-field password-input ${errors.confirmPassword ? 'input-error' : ''}`}
-                placeholder="Confirm new password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="password-toggle"
-              >
-                {showConfirmPassword ? <EyeOff className="toggle-icon" /> : <Eye className="toggle-icon" />}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="error-text">{errors.confirmPassword}</p>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading}
-            className={`submit-button ${loading ? 'submit-button-loading' : ''}`}
-          >
-            {loading ? 'Resetting Password...' : 'Reset Password'}
-          </button>
-        </div>
-
-        <div className="footer-section">
-          <a href="/login" className="back-link">
-            Back to Login
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PasswordReset;
+// export default AuthForm;
