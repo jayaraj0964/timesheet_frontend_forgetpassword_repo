@@ -10,28 +10,53 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     setLoading(true);
     setMessage({ text: '', type: '' });
 
     try {
-      const res = await fetch('http://localhost:8080/auth/login', {
+      // Login request
+      const loginRes = await fetch('http://localhost:8080/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const loginData = await loginRes.json();
 
-      if (res.ok) {
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
+      if (!loginRes.ok) {
+        setMessage({ text: typeof loginData === 'string' ? loginData : 'Login failed', type: 'error' });
+        setLoading(false);
+        return;
+      }
+
+      // Store tokens
+      localStorage.setItem('accessToken', loginData.accessToken);
+      localStorage.setItem('refreshToken', loginData.refreshToken);
+
+      // Fetch user data
+      const userRes = await fetch('http://localhost:8080/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${loginData.accessToken}`,
+        },
+      });
+
+      const userData = await userRes.json();
+
+      if (userRes.ok) {
         setMessage({ text: 'Login successful!', type: 'success' });
-        setTimeout(() => navigate('/dashboard'), 1500);
+        // Redirect based on profile existence
+        if (userData.profile) {
+          setTimeout(() => navigate(`/users/${userData.id}`), 1500);
+        } else {
+          setTimeout(() => navigate(`/create-profile/${userData.id}`), 1500);
+        }
       } else {
-        setMessage({ text: typeof data === 'string' ? data : 'Login failed', type: 'error' });
+        setMessage({ text: 'Failed to fetch user data', type: 'error' });
       }
     } catch {
       setMessage({ text: 'Network error', type: 'error' });
