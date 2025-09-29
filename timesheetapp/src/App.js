@@ -7,6 +7,8 @@ import ResetPassword from './components/ResetPassword';
 import CreateProfile from './components/CreateProfile';
 import Dashboard from './components/Dashboard';
 import UserDetails from './components/UserDetailes';
+import PositionManagement from './PositionManagement';
+import RoleManagement from './RoleManagement';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/create-profile/:id" element={<CreateProfile />} />
         <Route path="/users/:id" element={<UserDetails />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/position_management" element={<PositionManagement />} />
+        <Route path="/roles" element={<RoleManagement />} />
       </Routes>
     </Router>
   );
