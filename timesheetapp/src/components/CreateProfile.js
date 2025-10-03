@@ -19,44 +19,41 @@ const CreateProfile = () => {
     educationQualification: '',
     email: '',
     roleId: '',
+    teamid: ''
   });
+
+  const [teams, setTeams] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams(); // Get the user ID from the URL
+  const { id } = useParams(); // user ID from URL
 
-  // Optional: Fetch the user's email to prefill the form
+  // 🔄 Fetch teams and roles on mount
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchDropdownData = async () => {
       const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) {
-        setMessage({ text: 'No access token found. Please log in.', type: 'error' });
-        setTimeout(() => navigate('/'), 1500);
-        return;
-      }
+      const headers = { Authorization: `Bearer ${accessToken}` };
 
       try {
-        // Assuming you have an endpoint to fetch user details, e.g., /api/users/me
-        const res = await fetch('http://localhost:8080/api/users/me', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setFormData((prev) => ({ ...prev, email: data.email }));
-        } else {
-          setMessage({ text: 'Failed to fetch user data', type: 'error' });
-        }
-      } catch {
-        setMessage({ text: 'Network error', type: 'error' });
+        const [teamRes, roleRes] = await Promise.all([
+          fetch('http://localhost:8080/api/getallteams', { headers }),
+          fetch('http://localhost:8080/api/roles/getallroles', { headers }),
+        ]);
+
+        const teamData = await teamRes.json();
+        const roleData = await roleRes.json();
+
+        // ✅ Handle both array and wrapped object responses
+        setTeams(teamData.teams || teamData);
+        setRoles(roleData.roles || roleData);
+      } catch (error) {
+        console.error('❌ Dropdown fetch error:', error.message);
       }
     };
 
-    fetchUserData();
-  }, [navigate]);
+    fetchDropdownData();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -87,13 +84,13 @@ const CreateProfile = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ text: 'Profile created successfully!', type: 'success' });
-        setTimeout(() => navigate('/dashboard'), 1500); // Redirect to dashboard after success
+        setMessage({ text: '✅ Profile created successfully!', type: 'success' });
+        setTimeout(() => navigate('/dashboard'), 1500);
       } else {
-        setMessage({ text: typeof data === 'string' ? data : 'Failed to create profile', type: 'error' });
+        setMessage({ text: typeof data === 'string' ? data : '❌ Failed to create profile', type: 'error' });
       }
     } catch {
-      setMessage({ text: 'Network error', type: 'error' });
+      setMessage({ text: '❌ Network error', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -115,162 +112,79 @@ const CreateProfile = () => {
         )}
 
         <div className="form-container">
+          {[
+            { name: 'firstName', placeholder: 'Enter your first name' },
+            { name: 'middleName', placeholder: 'Enter your middle name' },
+            { name: 'lastName', placeholder: 'Enter your last name' },
+            { name: 'birthDate', type: 'date', placeholder: 'Select your birth date' },
+            { name: 'skills', placeholder: 'Enter your skills (e.g., Java, React)' },
+            { name: 'address', placeholder: 'Enter your address' },
+            { name: 'contactNumber', placeholder: 'Enter your contact number' },
+            { name: 'emergencyContactName', placeholder: 'Emergency contact name' },
+            { name: 'emergencyContactNumber', placeholder: 'Emergency contact number' },
+            { name: 'email', type: 'email', placeholder: 'Enter your email' },
+          ].map(({ name, placeholder, type = 'text' }) => (
+            <div className="input-group" key={name}>
+              <input
+                type={type}
+                name={name}
+                value={formData[name]}
+                onChange={handleChange}
+                className="input-field"
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
+
+          {/* 🔽 Gender Dropdown */}
           <div className="input-group">
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your first name"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="middleName"
-              value={formData.middleName}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your middle name"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your last name"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="date"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Select your birth date"
-            />
-          </div>
-          <div className="input-group">
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="input-field"
-            >
-              <option value="" disabled>
-                Select Gender
-              </option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+            <select name="gender" value={formData.gender} onChange={handleChange} className="input-field">
+              <option value="" disabled>Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
             </select>
           </div>
+
+          {/* 🔽 Relationship Dropdown */}
           <div className="input-group">
-            <input
-              type="text"
-              name="skills"
-              value={formData.skills}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your skills (e.g., JavaScript, Python)"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your address"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your contact number"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="emergencyContactName"
-              value={formData.emergencyContactName}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter emergency contact name"
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="text"
-              name="emergencyContactNumber"
-              value={formData.emergencyContactNumber}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter emergency contact number"
-            />
-          </div>
-          <div className="input-group">
-            <select
-              name="relationship"
-              value={formData.relationship}
-              onChange={handleChange}
-              className="input-field"
-            >
-              <option value="" disabled>
-                Select Relationship
-              </option>
-              <option value="Father">Father</option>
-              <option value="Mother">Mother</option>
-              <option value="Sister">Sister</option>
-              <option value="Brother">Brother</option>
-              <option value="Spouse">Spouse</option>
+            <select name="relationship" value={formData.relationship} onChange={handleChange} className="input-field">
+              <option value="" disabled>Select Relationship</option>
+              <option>Father</option>
+              <option>Mother</option>
+              <option>Sister</option>
+              <option>Brother</option>
+              <option>Spouse</option>
             </select>
           </div>
+
+          {/* 🔽 Education Dropdown */}
           <div className="input-group">
-            <select
-              name="educationQualification"
-              value={formData.educationQualification}
-              onChange={handleChange}
-              className="input-field"
-            >
-              <option value="" disabled>
-                Select Education
-              </option>
-              <option value="B.Tech">B.Tech</option>
-              <option value="Degree">Degree</option>
+            <select name="educationQualification" value={formData.educationQualification} onChange={handleChange} className="input-field">
+              <option value="" disabled>Select Education</option>
+              <option>B.Tech</option>
+              <option>Degree</option>
             </select>
           </div>
+
+          {/* 🔽 Role Dropdown */}
           <div className="input-group">
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your email"
-              disabled
-            />
+            <select name="roleId" value={formData.roleId} onChange={handleChange} className="input-field">
+              <option value="" disabled>Select Role</option>
+              {roles.map(role => (
+                <option key={role.roleId} value={role.roleId}>{role.roleName}</option>
+              ))}
+            </select>
           </div>
+
+          {/* 🔽 Team Dropdown */}
           <div className="input-group">
-            <input
-              type="number"
-              name="roleId"
-              value={formData.roleId}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Enter your role ID"
-            />
+            <select name="teamid" value={formData.teamid} onChange={handleChange} className="input-field">
+              <option value="" disabled>Select Team</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>{team.teamname}</option>
+              ))}
+            </select>
           </div>
 
           <button onClick={handleSubmit} disabled={loading} className="submit-button">

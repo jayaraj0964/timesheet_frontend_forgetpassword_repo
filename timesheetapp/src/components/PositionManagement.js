@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
-import './App.css';
+import '../App.css';
 
 const PositionManagement = () => {
   const [positions, setPositions] = useState([]);
@@ -34,8 +34,10 @@ const PositionManagement = () => {
       const data = await res.json();
       if (res.ok) {
         setPositions(data);
+      } else if (res.status === 403) {
+        setMessage({ text: 'Access denied. Insufficient permissions.', type: 'error' });
       } else {
-        setMessage({ text: 'Failed to fetch positions', type: 'error' });
+        setMessage({ text: `Failed to fetch positions: ${res.status} - ${await res.text()}`, type: 'error' });
       }
     } catch (error) {
       setMessage({ text: 'Network error', type: 'error' });
@@ -47,43 +49,48 @@ const PositionManagement = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage({ text: '', type: '' });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ text: '', type: '' });
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    const url = editingId ? `/api/positions/${editingId}` : '/api/positions/postpositions'; // Full path
+    const method = editingId ? 'PUT' : 'POST';
 
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const url = editingId ? `/api/positions/${editingId}` : '/api/positions/postpositions';
-      const method = editingId ? 'PUT' : 'POST';
+    const res = await fetch(`http://localhost:8080${url}`, {
+      method,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        positionName: formData.positionName,
+        rolesResponsblities: formData.rolesResponsblities,
+      }),
+    });
 
-      const res = await fetch(`http://localhost:8080/api/positions${url}`, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          positionName: formData.positionName,
-          rolesResponsblities: formData.rolesResponsblities,
-        }),
-      });
+    const responseText = await res.text();
+    console.log(`Request ${method} to ${url}:`, res.status, responseText);
 
-      if (res.ok) {
-        setMessage({ text: `Position ${editingId ? 'updated' : 'created'} successfully!`, type: 'success' });
-        setFormData({ positionName: '', rolesResponsblities: '' });
-        setEditingId(null);
-        fetchPositions();
-      } else {
-        setMessage({ text: `Failed to ${editingId ? 'update' : 'create'} position`, type: 'error' });
-      }
-    } catch (error) {
-      setMessage({ text: 'Network error', type: 'error' });
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      setMessage({ text: `Position ${editingId ? 'updated' : 'created'} successfully!`, type: 'success' });
+      setFormData({ positionName: '', rolesResponsblities: '' });
+      setEditingId(null);
+      fetchPositions();
+    } else if (res.status === 403) {
+      setMessage({ text: `Access denied: ${responseText}`, type: 'error' });
+    } else {
+      setMessage({ text: `Failed to ${editingId ? 'update' : 'create'} position: ${res.status} - ${responseText}`, type: 'error' });
     }
-  };
+  } catch (error) {
+    setMessage({ text: 'Network error', type: 'error' });
+    console.error('Request error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEdit = (position) => {
     setFormData({ positionName: position.positionName, rolesResponsblities: position.rolesResponsblities });
@@ -105,8 +112,10 @@ const PositionManagement = () => {
         if (res.ok) {
           setMessage({ text: 'Position deleted successfully!', type: 'success' });
           fetchPositions();
+        } else if (res.status === 403) {
+          setMessage({ text: 'Access denied. Insufficient permissions.', type: 'error' });
         } else {
-          setMessage({ text: 'Failed to delete position', type: 'error' });
+          setMessage({ text: `Failed to delete position: ${res.status} - ${await res.text()}`, type: 'error' });
         }
       } catch (error) {
         setMessage({ text: 'Network error', type: 'error' });

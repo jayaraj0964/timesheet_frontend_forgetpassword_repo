@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
-import './App.css';
+import '../App.css';
 
 const RoleManagement = () => {
   const [roles, setRoles] = useState([]);
@@ -34,8 +34,10 @@ const RoleManagement = () => {
       const data = await res.json();
       if (res.ok) {
         setRoles(data);
+      } else if (res.status === 403) {
+        setMessage({ text: 'Access denied. Insufficient permissions.', type: 'error' });
       } else {
-        setMessage({ text: 'Failed to fetch roles', type: 'error' });
+        setMessage({ text: `Failed to fetch roles: ${res.status} - ${await res.text()}`, type: 'error' });
       }
     } catch (error) {
       setMessage({ text: 'Network error', type: 'error' });
@@ -55,10 +57,10 @@ const RoleManagement = () => {
 
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const url = editingId ? `/api/roles/${editingId}` : '/api/roles/postrole';
+      const url = editingId ? `/api/roles/${editingId}` : '/api/roles/postrole'; // Full path
       const method = editingId ? 'PUT' : 'POST';
 
-      const res = await fetch(`http://localhost:8080/api/roles${url}`, {
+      const res = await fetch(`http://localhost:8080${url}`, { // Use full base URL
         method,
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -70,16 +72,22 @@ const RoleManagement = () => {
         }),
       });
 
+      const responseText = await res.text();
+      console.log(`Request ${method} to ${url}:`, res.status, responseText);
+
       if (res.ok) {
         setMessage({ text: `Role ${editingId ? 'updated' : 'created'} successfully!`, type: 'success' });
         setFormData({ roleName: '', description: '' });
         setEditingId(null);
         fetchRoles();
+      } else if (res.status === 403) {
+        setMessage({ text: `Access denied: ${responseText}`, type: 'error' });
       } else {
-        setMessage({ text: `Failed to ${editingId ? 'update' : 'create'} role`, type: 'error' });
+        setMessage({ text: `Failed to ${editingId ? 'update' : 'create'} role: ${res.status} - ${responseText}`, type: 'error' });
       }
     } catch (error) {
       setMessage({ text: 'Network error', type: 'error' });
+      console.error('Request error:', error);
     } finally {
       setLoading(false);
     }
@@ -105,8 +113,10 @@ const RoleManagement = () => {
         if (res.ok) {
           setMessage({ text: 'Role deleted successfully!', type: 'success' });
           fetchRoles();
+        } else if (res.status === 403) {
+          setMessage({ text: 'Access denied. Insufficient permissions.', type: 'error' });
         } else {
-          setMessage({ text: 'Failed to delete role', type: 'error' });
+          setMessage({ text: `Failed to delete role: ${res.status} - ${await res.text()}`, type: 'error' });
         }
       } catch (error) {
         setMessage({ text: 'Network error', type: 'error' });

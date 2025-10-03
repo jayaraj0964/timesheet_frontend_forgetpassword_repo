@@ -7,8 +7,13 @@ import ResetPassword from './components/ResetPassword';
 import CreateProfile from './components/CreateProfile';
 import Dashboard from './components/Dashboard';
 import UserDetails from './components/UserDetailes';
-import PositionManagement from './PositionManagement';
-import RoleManagement from './RoleManagement';
+import RoleManagement from './components/RoleManagement';
+import PositionManagement from './components/PositionManagement';
+import ShiftManagement from './components/ShiftManagement';
+import TaskCategoryManagement from './components/TaskCategoryManagement';
+import TeamManagement from './components/TeamManagement';
+import TimesheetManagement from './components/TimeSheetManagement';
+import UserPositionManagement from './components/UserPositionManagement';
 
 function App() {
   return (
@@ -23,6 +28,11 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/position_management" element={<PositionManagement />} />
         <Route path="/roles" element={<RoleManagement />} />
+        <Route path="/shiftmanagemnet" element={<ShiftManagement />} />
+        <Route path="/TaskCategoryManagement" element={<TaskCategoryManagement />} />
+        <Route path="/TeamManagement" element={<TeamManagement />} />
+        <Route path="/TimeSheetManagement" element={<TimesheetManagement />} />
+         <Route path="/Userpostions" element={<UserPositionManagement/>} />
       </Routes>
     </Router>
   );

@@ -12,7 +12,20 @@ const LoginForm = () => {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async () => {
+  const validateForm = () => {
+    if (!formData.username.trim()) return 'Username is required.';
+    if (!formData.password.trim()) return 'Password is required.';
+    return '';
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent default form submission
+    const validationError = validateForm();
+    if (validationError) {
+      setMessage({ text: validationError, type: 'error' });
+      return;
+    }
+
     setLoading(true);
     setMessage({ text: '', type: '' });
 
@@ -27,7 +40,7 @@ const LoginForm = () => {
       const loginData = await loginRes.json();
 
       if (!loginRes.ok) {
-        setMessage({ text: typeof loginData === 'string' ? loginData : 'Login failed', type: 'error' });
+        setMessage({ text: loginData.message || 'Login failed', type: 'error' });
         setLoading(false);
         return;
       }
@@ -41,7 +54,7 @@ const LoginForm = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${loginData.accessToken}`,
+          'Authorization': `Bearer ${loginData.accessToken}`,
         },
       });
 
@@ -49,17 +62,18 @@ const LoginForm = () => {
 
       if (userRes.ok) {
         setMessage({ text: 'Login successful!', type: 'success' });
-        // Redirect based on profile existence
-        if (userData.profile) {
-          setTimeout(() => navigate(`/users/${userData.id}`), 1500);
-        } else {
-          setTimeout(() => navigate(`/create-profile/${userData.id}`), 1500);
-        }
+        // Redirect to dashboard regardless of profile status
+        setTimeout(() => navigate('/dashboard'), 1500);
+      } else if (userRes.status === 401) {
+        setMessage({ text: 'Session expired. Please log in again.', type: 'error' });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       } else {
         setMessage({ text: 'Failed to fetch user data', type: 'error' });
       }
-    } catch {
-      setMessage({ text: 'Network error', type: 'error' });
+    } catch (error) {
+      setMessage({ text: 'Network error or invalid credentials', type: 'error' });
+      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -81,29 +95,48 @@ const LoginForm = () => {
           </div>
         )}
 
-        <div className="form-container">
+        <form onSubmit={handleSubmit} className="form-container">
           <div className="input-group">
             <label>Username</label>
             <div className="input-wrapper">
               <User className="input-icon" />
-              <input type="text" name="username" value={formData.username} onChange={handleChange} className="input-field" />
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Enter username"
+              />
             </div>
           </div>
 
           <div className="input-group">
             <label>Password</label>
             <div className="password-input-wrapper">
-              <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} className="input-field" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="password-toggle">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Enter password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="password-toggle"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
                 {showPassword ? <EyeOff /> : <Eye />}
               </button>
             </div>
           </div>
 
-          <button onClick={handleSubmit} disabled={loading} className="submit-button">
+          <button type="submit" disabled={loading} className="submit-button">
             {loading ? 'Logging in...' : 'Login'}
           </button>
-        </div>
+        </form>
 
         <div className="footer-section">
           <a href="/forgot-password" className="back-link">Forgot Password?</a>
