@@ -3,7 +3,7 @@
   font-family: Arial, sans-serif;
   max-width: 800px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  background-color: #f0f4f8; /* Changed from linear-gradient to solid color */
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
