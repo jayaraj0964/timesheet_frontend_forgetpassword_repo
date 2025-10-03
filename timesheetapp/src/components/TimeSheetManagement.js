@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import './TimesheetManagement.css';
+import '../Timesheet.css';
 
 class TimesheetManagement extends Component {
   constructor(props) {
