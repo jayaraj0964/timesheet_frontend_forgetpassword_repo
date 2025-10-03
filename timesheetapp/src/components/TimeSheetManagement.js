@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './TimesheetManagement.css';
 
 class TimesheetManagement extends Component {
   constructor(props) {
@@ -42,7 +43,6 @@ class TimesheetManagement extends Component {
   }
 
   componentDidMount() {
-    // Restore timer state from localStorage
     const savedTimeIn = localStorage.getItem('timeIn');
     const savedIsTracking = localStorage.getItem('isTracking') === 'true';
     const savedElapsedTime = localStorage.getItem('elapsedTime') || '00:00:00';
@@ -62,12 +62,10 @@ class TimesheetManagement extends Component {
   }
 
   componentWillUnmount() {
-    // Clean up timer on unmount
     this.stopTimer();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // Save timer state to localStorage when it changes
     if (prevState.timeIn !== this.state.timeIn || prevState.isTracking !== this.state.isTracking || prevState.elapsedTime !== this.state.elapsedTime) {
       localStorage.setItem('timeIn', this.state.timeIn ? this.state.timeIn.toISOString() : null);
       localStorage.setItem('isTracking', this.state.isTracking);
@@ -449,49 +447,35 @@ class TimesheetManagement extends Component {
     const { timesheets, categories, shifts, users, workDate, hoursWorked, details, categoryId, shiftId, userId, currentUser, editingId, loading, error, successMessage, isTracking, elapsedTime } = this.state;
 
     return (
-      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '800px', margin: '0 auto', background: 'linear-gradient(135deg, #f0f4f8, #d9e2ec)', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-        <h2 style={{ color: '#2c3e50', textAlign: 'center', marginBottom: '20px', fontSize: '24px' }}>
+      <div className="timesheet-container">
+        <h2 className="timesheet-title">
           {currentUser.role === 'ROLE_ADMIN' ? 'All Timesheets' : 'My Timesheet Management'}
         </h2>
-        {successMessage && <p style={{ color: '#27ae60', textAlign: 'center', marginBottom: '10px' }}>{successMessage}</p>}
+        {successMessage && <p className="success-message">{successMessage}</p>}
         {error && (
-          <p style={{ color: '#e74c3c', textAlign: 'center', marginBottom: '10px' }}>
+          <p className="error-message">
             {error}
             {error.includes('Failed to fetch users') && (
-              <button onClick={this.retryFetchUsers} style={{ padding: '5px 10px', backgroundColor: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '10px' }}>Retry</button>
+              <button onClick={this.retryFetchUsers} className="retry-button">Retry</button>
             )}
           </p>
         )}
 
-        <form onSubmit={this.handleAddOrUpdate} style={{ marginBottom: '20px' }}>
-          <div style={{ marginBottom: '15px' }}>
+        <form onSubmit={this.handleAddOrUpdate} className="timesheet-form">
+          <div className="form-group">
             <input
               type="date"
               name="workDate"
               value={workDate}
               onChange={this.handleInputChange}
-              style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box' }}
               required
-              disabled={currentUser.role !== 'ROLE_ADMIN'} // Only admins can change date
+              disabled={currentUser.role !== 'ROLE_ADMIN'}
             />
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <div className="time-buttons">
               <button
                 type="button"
                 onClick={this.handleTimeIn}
                 disabled={isTracking || !currentUser.userId}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: (isTracking || !currentUser.userId) ? '#ccc' : '#2ecc71',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: (isTracking || !currentUser.userId) ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                  transition: 'background-color 0.3s',
-                }}
-                onMouseOver={(e) => !(isTracking || !currentUser.userId) && (e.target.style.backgroundColor = '#27ae60')}
-                onMouseOut={(e) => !(isTracking || !currentUser.userId) && (e.target.style.backgroundColor = '#2ecc71')}
               >
                 Time In
               </button>
@@ -499,49 +483,33 @@ class TimesheetManagement extends Component {
                 type="button"
                 onClick={this.handleTimeOut}
                 disabled={!isTracking || !currentUser.userId}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: (!isTracking || !currentUser.userId) ? '#ccc' : '#e74c3c',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: (!isTracking || !currentUser.userId) ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                  transition: 'background-color 0.3s',
-                }}
-                onMouseOver={(e) => (isTracking && currentUser.userId) && (e.target.style.backgroundColor = '#c0392b')}
-                onMouseOut={(e) => (isTracking && currentUser.userId) && (e.target.style.backgroundColor = '#e74c3c')}
               >
                 Time Out
               </button>
             </div>
-            <p style={{ textAlign: 'center', fontSize: '18px', marginBottom: '10px' }}>Track Time: {elapsedTime}</p>
+            <p className="track-time">Track Time: {elapsedTime}</p>
             <input
               type="time"
               name="hoursWorked"
               value={hoursWorked}
               onChange={this.handleInputChange}
-              style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box' }}
               required
-              disabled={true} // Hours worked is calculated automatically for users
+              disabled={true}
             />
             <textarea
               name="details"
               placeholder="Details"
               value={details}
               onChange={this.handleInputChange}
-              style={{ display: 'block', width: '100%', padding: '10px', height: '100px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box', resize: 'vertical' }}
               required
-              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null} // Allow entry for new timesheets, disable for editing
+              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null}
             />
             <select
               name="categoryId"
               value={categoryId}
               onChange={this.handleInputChange}
-              style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box' }}
               required
-              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null} // Allow selection for new timesheets, disable for editing
+              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null}
             >
               <option value="">Select Category</option>
               {categories.map((cat) => (
@@ -552,9 +520,8 @@ class TimesheetManagement extends Component {
               name="shiftId"
               value={shiftId}
               onChange={this.handleInputChange}
-              style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box' }}
               required
-              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null} // Allow selection for new timesheets, disable for editing
+              disabled={currentUser.role !== 'ROLE_ADMIN' && editingId !== null}
             >
               <option value="">Select Shift</option>
               {shifts.map((shift) => (
@@ -566,7 +533,6 @@ class TimesheetManagement extends Component {
                 name="userId"
                 value={userId}
                 onChange={this.handleInputChange}
-                style={{ display: 'block', width: '100%', padding: '10px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box' }}
                 required
               >
                 <option value="">Select User</option>
@@ -577,30 +543,13 @@ class TimesheetManagement extends Component {
                 ))}
               </select>
             ) : (
-              <input
-                type="hidden"
-                name="userId"
-                value={currentUser.userId}
-                readOnly
-              />
+              <input type="hidden" name="userId" value={currentUser.userId} readOnly />
             )}
           </div>
-          <div style={{ textAlign: 'center' }}>
+          <div className="form-actions">
             <button
               type="submit"
               disabled={loading || isTracking || currentUser.role !== 'ROLE_ADMIN'}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: (loading || isTracking || currentUser.role !== 'ROLE_ADMIN') ? '#ccc' : '#2ecc71',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: (loading || isTracking || currentUser.role !== 'ROLE_ADMIN') ? 'not-allowed' : 'pointer',
-                fontSize: '16px',
-                transition: 'background-color 0.3s',
-              }}
-              onMouseOver={(e) => !(loading || isTracking || currentUser.role !== 'ROLE_ADMIN') && (e.target.style.backgroundColor = '#27ae60')}
-              onMouseOut={(e) => !(loading || isTracking || currentUser.role !== 'ROLE_ADMIN') && (e.target.style.backgroundColor = '#2ecc71')}
             >
               {editingId ? 'Update Timesheet' : 'Add Timesheet'}
             </button>
@@ -616,19 +565,6 @@ class TimesheetManagement extends Component {
                   shiftId: '',
                   userId: currentUser.role === 'ROLE_USER' ? currentUser.userId : '',
                 })}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  marginLeft: '10px',
-                  transition: 'background-color 0.3s',
-                }}
-                onMouseOver={(e) => (e.target.style.backgroundColor = '#5a6268')}
-                onMouseOut={(e) => (e.target.style.backgroundColor = '#6c757d')}
               >
                 Cancel
               </button>
@@ -637,38 +573,34 @@ class TimesheetManagement extends Component {
         </form>
 
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#34495e' }}>Loading timesheets...</p>
+          <p className="loading-message">Loading timesheets...</p>
         ) : timesheets.length > 0 ? (
           <div>
-            <h3 style={{ color: '#2c3e50', marginBottom: '10px' }}>
+            <h3 className="timesheet-table-title">
               {currentUser.role === 'ROLE_ADMIN' ? 'All Timesheets' : 'My Timesheets'}
             </h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', borderRadius: '5px', overflow: 'hidden' }}>
+            <table className="timesheet-table">
               <thead>
-                <tr style={{ backgroundColor: '#ecf0f1' }}>
-                  <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Date</th>
-                  <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Hours Worked</th>
-                  <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Details</th>
-                  <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Category</th>
-                  <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Shift</th>
-                  {currentUser.role === 'ROLE_ADMIN' && <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>User</th>}
-                  {currentUser.role === 'ROLE_ADMIN' && <th style={{ padding: '10px', borderBottom: '2px solid #ddd' }}>Actions</th>}
+                <tr>
+                  <th>Date</th>
+                  <th>Hours Worked</th>
+                  <th>Details</th>
+                  <th>Category</th>
+                  <th>Shift</th>
+                  {currentUser.role === 'ROLE_ADMIN' && <th>User</th>}
+                  {currentUser.role === 'ROLE_ADMIN' && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {timesheets.map((timesheet) => (
-                  <tr key={timesheet.timesheetId} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '10px' }}>{timesheet.workDate}</td>
-                    <td style={{ padding: '10px' }}>{timesheet.hoursWorked ? timesheet.hoursWorked.substring(0, 5) : ''}</td>
-                    <td style={{ padding: '10px' }}>{timesheet.details}</td>
-                    <td style={{ padding: '10px' }}>
-                      {categories.find((cat) => cat.categoryId === timesheet.categoryId)?.categoryName || 'N/A'}
-                    </td>
-                    <td style={{ padding: '10px' }}>
-                      {shifts.find((shift) => shift.shiftId === timesheet.shiftId)?.shiftName || 'N/A'}
-                    </td>
+                  <tr key={timesheet.timesheetId}>
+                    <td>{timesheet.workDate}</td>
+                    <td>{timesheet.hoursWorked ? timesheet.hoursWorked.substring(0, 5) : ''}</td>
+                    <td>{timesheet.details}</td>
+                    <td>{categories.find((cat) => cat.categoryId === timesheet.categoryId)?.categoryName || 'N/A'}</td>
+                    <td>{shifts.find((shift) => shift.shiftId === timesheet.shiftId)?.shiftName || 'N/A'}</td>
                     {currentUser.role === 'ROLE_ADMIN' && (
-                      <td style={{ padding: '10px' }}>
+                      <td>
                         {timesheet.userId
                           ? users.find((user) => user.userId === timesheet.userId)?.username ||
                             users.find((user) => user.userId === timesheet.userId)?.email ||
@@ -677,42 +609,9 @@ class TimesheetManagement extends Component {
                       </td>
                     )}
                     {currentUser.role === 'ROLE_ADMIN' && (
-                      <td style={{ padding: '10px' }}>
-                        <button
-                          onClick={() => this.handleEdit(timesheet)}
-                          style={{
-                            padding: '5px 10px',
-                            backgroundColor: '#3498db',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            marginRight: '5px',
-                            transition: 'background-color 0.3s',
-                          }}
-                          onMouseOver={(e) => (e.target.style.backgroundColor = '#2980b9')}
-                          onMouseOut={(e) => (e.target.style.backgroundColor = '#3498db')}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => this.handleDelete(timesheet.timesheetId)}
-                          style={{
-                            padding: '5px 10px',
-                            backgroundColor: '#e74c3c',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            transition: 'background-color 0.3s',
-                          }}
-                          onMouseOver={(e) => (e.target.style.backgroundColor = '#c0392b')}
-                          onMouseOut={(e) => (e.target.style.backgroundColor = '#e74c3c')}
-                        >
-                          Delete
-                        </button>
+                      <td>
+                        <button onClick={() => this.handleEdit(timesheet)}>Edit</button>
+                        <button onClick={() => this.handleDelete(timesheet.timesheetId)}>Delete</button>
                       </td>
                     )}
                   </tr>
@@ -721,7 +620,7 @@ class TimesheetManagement extends Component {
             </table>
           </div>
         ) : (
-          <p style={{ textAlign: 'center', color: '#34495e' }}>No timesheets found.</p>
+          <p className="no-timesheets">No timesheets found.</p>
         )}
       </div>
     );
